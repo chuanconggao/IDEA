@@ -6,29 +6,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import subprocess
 import codecs
-from time import sleep
 
-from rq import Queue
-from redis import Redis
-
-from config import dataDir, binDir, redisQueuePrefix, redisQueueTimeout
+from config import dataDir, binDir
 from aux import print2
 
-q = Queue(
-    redisQueuePrefix + "topk",
-    connection=Redis(),
-    default_timeout=redisQueueTimeout
-)
-
 def getTopKTable(idStr, content, k, minLen, maxLen):
-    job = q.enqueue(getTopKTable_worker, idStr, content, k, minLen, maxLen)
-
-    while not job.is_failed and job.result is None:
-        sleep(1)
-
-    return job.result
-
-def getTopKTable_worker(idStr, content, k, minLen, maxLen):
     topKDir = os.path.join(dataDir, "topk")
     if not os.path.isdir(topKDir):
         os.mkdir(topKDir)

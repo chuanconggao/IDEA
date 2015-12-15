@@ -3,12 +3,12 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from flask import Flask, jsonify, request
-from flask.ext.api import status
+from flask import Flask
 from flask.ext.cors import CORS
 from flask.ext.cache import Cache
 from flask.ext.compress import Compress
 
+from job import startJob
 from config import bindPort, redisCachePrefix, redisCacheTimeout
 from topic import getTopicTable
 from topk import getTopKTable
@@ -25,34 +25,17 @@ cache = Cache(app, config={
 CORS(app)
 Compress(app)
 
-def startJob(func, argStrs, method='POST', contentType='application/json'):
-    def parseArgs(j, argStrs):
-        return [j[s] for s in argStrs]
-
-    if request.method == method:
-        if request.headers['Content-Type'] == contentType:
-            result = func(*parseArgs(request.json, argStrs))
-
-            if result is None:
-                return jsonify(error=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            else:
-                return jsonify(result=result)
-        else:
-            return jsonify(error=status.HTTP_406_NOT_ACCEPTABLE)
-    else:
-        return jsonify(error=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 @app.route('/topic/', methods=['POST'])
 def topic():
     return startJob(
-        getTopicTable,
+        "topic", getTopicTable,
         ["idStr", "content", "k", "wordNum"]
     )
 
 @app.route('/topk/', methods=['POST'])
 def topk():
     return startJob(
-        getTopKTable,
+        "topk", getTopKTable,
         ["idStr", "content", "k", "minLen", "maxLen"]
     )
 

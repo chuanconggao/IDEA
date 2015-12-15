@@ -7,29 +7,11 @@ import os
 import re
 import subprocess
 import codecs
-from time import sleep
 
-from rq import Queue
-from redis import Redis
-
-from config import dataDir, redisQueuePrefix, redisQueueTimeout
+from config import dataDir
 from aux import print2
 
-q = Queue(
-    redisQueuePrefix + "topic",
-    connection=Redis(),
-    default_timeout=redisQueueTimeout
-)
-
 def getTopicTable(idStr, content, k, wordNum):
-    job = q.enqueue(getTopicTable_worker, idStr, content, k, wordNum)
-
-    while not job.is_failed and job.result is None:
-        sleep(1)
-
-    return job.result
-
-def getTopicTable_worker(idStr, content, k, wordNum):
     topicDir = os.path.join(dataDir, "topic")
     if not os.path.isdir(topicDir):
         os.mkdir(topicDir)

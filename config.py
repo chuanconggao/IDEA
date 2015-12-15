@@ -9,6 +9,8 @@ dataDir = "data"
 binDir = "bin"
 tempDir = "temp"
 
+taskList = ["topic", "topk"]
+
 redisQueuePrefix = "gena_miner-service:"
 redisQueueTimeout = 3600
 
