@@ -3,15 +3,18 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from flask import Flask
+import sys
+import json
+
+from flask import Flask, jsonify
+from flask.ext.api import status
 from flask.ext.cors import CORS
 from flask.ext.cache import Cache
 from flask.ext.compress import Compress
 
+from task import Task
 from job import startJob
-from config import bindPort, redisCachePrefix, redisCacheTimeout
-from topic import getTopicTable
-from topk import getTopKTable
+from config import bindPort, redisCachePrefix, redisCacheTimeout, tasksDir, tasksFilename
 
 app = Flask("gena_miner-service")
 cache = Cache(app, config={
@@ -25,19 +28,20 @@ cache = Cache(app, config={
 CORS(app)
 Compress(app)
 
-@app.route('/topic/', methods=['POST'])
-def topic():
-    return startJob(
-        "topic", getTopicTable,
-        ["idStr", "content", "k", "wordNum"]
-    )
+sys.path.append(tasksDir)
 
-@app.route('/topk/', methods=['POST'])
-def topk():
-    return startJob(
-        "topk", getTopKTable,
-        ["idStr", "content", "k", "minLen", "maxLen"]
-    )
+with open(tasksFilename) as f:
+    tasks = {
+        x["name"]: Task(x)
+        for x in json.load(f)
+    }
+
+@app.route('/<task_name>/', methods=['POST'])
+def parseTask(task_name):
+    if task_name not in tasks:
+        return jsonify(error=status.HTTP_404_NOT_FOUND)
+
+    return startJob(tasks[task_name])
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=bindPort, threaded=False, debug=True)
+    app.run(host="0.0.0.0", port=bindPort, threaded=True, debug=True)

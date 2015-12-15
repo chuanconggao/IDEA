@@ -10,7 +10,7 @@ from redis import Redis
 from flask import jsonify, request
 from flask.ext.api import status
 
-from config import taskList, redisQueuePrefix, redisQueueTimeout
+from config import taskList, jobCheckInterval, redisQueuePrefix, redisQueueTimeout
 
 connection = Redis()
 queues = {
@@ -31,7 +31,7 @@ def verifyRequest(method, contentType):
 
     return (True, None)
 
-def startJob(task, func, argStrs):
+def startJob(task):
     def parseArgs(j, argStrs):
         return [j[s] for s in argStrs]
 
@@ -39,12 +39,14 @@ def startJob(task, func, argStrs):
     if not verified:
         return jsonify(error=error)
 
-    job = queues[task].enqueue(func, *parseArgs(request.json, argStrs))
+    job = queues[task.name].enqueue(task.func, *parseArgs(request.json, task.args))
 
+    runtime = 0
     while not job.is_failed and job.result is None:
-        sleep(1)
+        sleep(jobCheckInterval)
+        runtime += jobCheckInterval
 
     if job.is_failed:
         return jsonify(error=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return jsonify(result=job.result)
+        return jsonify(result=job.result, runtime=runtime)

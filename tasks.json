@@ -1,0 +1,18 @@
+[
+    {
+        "name": "topic",
+        "args": ["idStr", "content", "k", "wordNum"],
+        "import": "topic",
+        "func": "getTopicTable",
+        "description": "Topic Model"
+
+    },
+    {
+        "name": "topk",
+        "args": ["idStr", "content", "k", "minLen", "maxLen"],
+        "import": "topk",
+        "func": "getTopKTable",
+        "description": "Top-k sequential pattern"
+    }
+]
+

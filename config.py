@@ -9,7 +9,11 @@ dataDir = "data"
 binDir = "bin"
 tempDir = "temp"
 
+tasksDir = "tasks"
+tasksFilename = "tasks.json"
+
 taskList = ["topic", "topk"]
+jobCheckInterval = 0.5
 
 redisQueuePrefix = "gena_miner-service:"
 redisQueueTimeout = 3600
