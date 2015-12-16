@@ -1,0 +1,8 @@
+{
+    "port": 8888,
+    "tasksDir": "../IDEA-tasks/tasks",
+    "redis": {
+        "host": "54.200.224.1",
+        "password": "c3fe46ff861c2fef26071ab78cd67deaef9712385ae260c4e7720ceb9db6e7f2"
+    }
+}

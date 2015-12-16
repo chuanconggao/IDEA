@@ -11,9 +11,9 @@ from flask import jsonify, request
 from flask.ext.api import status
 
 from task import getTaskNames
-from config import jobCheckInterval, redisQueuePrefix, redisQueueTimeout
+from config import jobCheckInterval, redisHost, redisPassword, redisQueuePrefix, redisQueueTimeout
 
-connection = Redis()
+connection = Redis(host=redisHost, password=redisPassword)
 queues = {
     task: Queue(
         redisQueuePrefix + task,

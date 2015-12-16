@@ -11,22 +11,13 @@ import json
 from flask import Flask, jsonify
 from flask.ext.api import status
 from flask.ext.cors import CORS
-from flask.ext.cache import Cache
 from flask.ext.compress import Compress
 
 from task import getTaskNames, Task
 from job import startJob
-from config import bindPort, redisCachePrefix, redisCacheTimeout, tasksDir, tasksFilename
+from config import bindPort, tasksDir, tasksFilename
 
 app = Flask("IDEA")
-cache = Cache(app, config={
-    'CACHE_TYPE': 'redis',
-    'CACHE_KEY_PREFIX': redisCachePrefix + "cache:",
-    'CACHE_DEFAULT_TIMEOUT': redisCacheTimeout
-})
-# cache = Cache(app, config={
-    # 'CACHE_TYPE': 'null'
-# })
 CORS(app)
 Compress(app)
 
@@ -40,7 +31,6 @@ for t in getTaskNames():
 
 @app.route('/task/', methods=['GET'])
 def listTasks():
-    print(tasks)
     return jsonify(result=[
         {
             "name": x.name,

@@ -3,15 +3,21 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-bindPort = 8888
+import json
 
-tasksDir = "../IDEA-tasks/tasks"
+with open("config.json") as f:
+    j = json.load(f)
+
+    bindPort = j["port"]
+
+    tasksDir = j["tasksDir"]
+
+    redisHost = j["redis"]["host"]
+    redisPassword = j["redis"]["password"]
+
 tasksFilename = "task.json"
 
 jobCheckInterval = 0.5
 
 redisQueuePrefix = "IDEA:"
 redisQueueTimeout = 3600
-
-redisCachePrefix = "IDEA:"
-redisCacheTimeout = 3600

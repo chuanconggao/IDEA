@@ -19,6 +19,6 @@ class Task(object):
     def __init__(self, template):
         self.name = template["name"]
         self.args = template["args"]
-        sys.path.append(template["name"])
+        sys.path.append(os.path.join(tasksDir, template["name"]))
         self.func = getattr(__import__(template["name"]), template["func"])
         self.description = template["description"]
