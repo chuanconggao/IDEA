@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
 import os
 import os.path
 
@@ -18,5 +19,6 @@ class Task(object):
     def __init__(self, template):
         self.name = template["name"]
         self.args = template["args"]
-        self.func = getattr(__import__(template["import"]), template["func"])
+        sys.path.append(template["name"])
+        self.func = getattr(__import__(template["name"]), template["func"])
         self.description = template["description"]

@@ -32,19 +32,11 @@ Compress(app)
 
 tasks = {}
 
-def init():
-    global tasks
-
-    for t in getTaskNames():
-        d = os.path.join(tasksDir, t)
-        sys.path.append(d)
-        with open(os.path.join(d, tasksFilename)) as f:
-            j = json.load(f)
-            tasks[j["name"]] = Task(j)
-
-    return ""
-
-init()
+for t in getTaskNames():
+    d = os.path.join(tasksDir, t)
+    with open(os.path.join(d, tasksFilename)) as f:
+        j = json.load(f)
+        tasks[j["name"]] = Task(j)
 
 @app.route('/task/', methods=['GET'])
 def listTasks():
