@@ -5,10 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 bindPort = 8888
 
-dataDir = "../../../data"
-tempDir = "../../../temp"
-
-tasksDir = "tasks"
+tasksDir = "../IDEA-tasks/tasks"
 tasksFilename = "task.json"
 
 jobCheckInterval = 0.5
