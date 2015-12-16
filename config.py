@@ -5,18 +5,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 bindPort = 8888
 
-dataDir = "data"
-binDir = "bin"
-tempDir = "temp"
+dataDir = "../../../data"
+tempDir = "../../../temp"
 
 tasksDir = "tasks"
-tasksFilename = "tasks.json"
+tasksFilename = "task.json"
 
-taskList = ["topic", "topk"]
 jobCheckInterval = 0.5
 
-redisQueuePrefix = "gena_miner-service:"
+redisQueuePrefix = "IDEA:"
 redisQueueTimeout = 3600
 
-redisCachePrefix = "gena_miner-service:"
+redisCachePrefix = "IDEA:"
 redisCacheTimeout = 3600

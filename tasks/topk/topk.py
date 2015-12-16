@@ -3,14 +3,16 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
-import subprocess
-import codecs
-
-from config import dataDir, binDir
-from aux import print2
-
 def getTopKTable(idStr, content, k, minLen, maxLen):
+    import sys
+    import os
+    import subprocess
+    import codecs
+
+    sys.path.append("../../")
+    from config import dataDir, tasksDir
+    from aux import print2
+
     topKDir = os.path.join(dataDir, "topk")
     if not os.path.isdir(topKDir):
         os.mkdir(topKDir)
@@ -38,9 +40,9 @@ def getTopKTable(idStr, content, k, minLen, maxLen):
                 f.write('\n')
 
         args = [
-            "mono \"{}\"".format(os.path.join(binDir, "TopKSeqPattMiner.exe")),
+            "mono \"{}\"".format(os.path.join("bin", "TopKSeqPattMiner.exe")),
             "--in=\"{}\"".format(inputFileName),
-            "--stopwords=\"{}\"".format(os.path.join(binDir, "stopwords.txt")),
+            "--stopwords=\"{}\"".format(os.path.join("bin", "stopwords.txt")),
             "-k=" + str(k),
             "--minlen=" + str(minLen),
             "--maxlen=" + str(maxLen)

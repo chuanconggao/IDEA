@@ -3,15 +3,17 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
-import re
-import subprocess
-import codecs
-
-from config import dataDir
-from aux import print2
-
 def getTopicTable(idStr, content, k, wordNum):
+    import sys
+    import os
+    import re
+    import subprocess
+    import codecs
+
+    sys.path.append("../../")
+    from config import dataDir
+    from aux import print2
+
     topicDir = os.path.join(dataDir, "topic")
     if not os.path.isdir(topicDir):
         os.mkdir(topicDir)

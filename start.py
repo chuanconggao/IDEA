@@ -4,6 +4,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
+import os
+import os.path
 import json
 
 from flask import Flask, jsonify
@@ -12,14 +14,14 @@ from flask.ext.cors import CORS
 from flask.ext.cache import Cache
 from flask.ext.compress import Compress
 
-from task import Task
+from task import getTaskNames, Task
 from job import startJob
 from config import bindPort, redisCachePrefix, redisCacheTimeout, tasksDir, tasksFilename
 
-app = Flask("gena_miner-service")
+app = Flask("IDEA")
 cache = Cache(app, config={
     'CACHE_TYPE': 'redis',
-    'CACHE_KEY_PREFIX': redisCachePrefix + "service:",
+    'CACHE_KEY_PREFIX': redisCachePrefix + "cache:",
     'CACHE_DEFAULT_TIMEOUT': redisCacheTimeout
 })
 # cache = Cache(app, config={
@@ -28,16 +30,36 @@ cache = Cache(app, config={
 CORS(app)
 Compress(app)
 
-sys.path.append(tasksDir)
+tasks = {}
 
-with open(tasksFilename) as f:
-    tasks = {
-        x["name"]: Task(x)
-        for x in json.load(f)
-    }
+def init():
+    global tasks
 
-@app.route('/<task_name>/', methods=['POST'])
-def parseTask(task_name):
+    for t in getTaskNames():
+        d = os.path.join(tasksDir, t)
+        sys.path.append(d)
+        with open(os.path.join(d, tasksFilename)) as f:
+            j = json.load(f)
+            tasks[j["name"]] = Task(j)
+
+    return ""
+
+init()
+
+@app.route('/task/', methods=['GET'])
+def listTasks():
+    print(tasks)
+    return jsonify(result=[
+        {
+            "name": x.name,
+            "args": x.args,
+            "description": x.description,
+        }
+        for x in tasks.itervalues()
+    ])
+
+@app.route('/task/<task_name>/', methods=['POST'])
+def runTask(task_name):
     if task_name not in tasks:
         return jsonify(error=status.HTTP_404_NOT_FOUND)
 

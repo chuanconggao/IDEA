@@ -10,7 +10,8 @@ from redis import Redis
 from flask import jsonify, request
 from flask.ext.api import status
 
-from config import taskList, jobCheckInterval, redisQueuePrefix, redisQueueTimeout
+from task import getTaskNames
+from config import jobCheckInterval, redisQueuePrefix, redisQueueTimeout
 
 connection = Redis()
 queues = {
@@ -19,7 +20,7 @@ queues = {
         connection=connection,
         default_timeout=redisQueueTimeout
     )
-    for task in taskList
+    for task in getTaskNames()
 }
 
 def verifyRequest(method, contentType):
