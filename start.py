@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
 import os
 import os.path
 import json
@@ -23,13 +22,24 @@ Compress(app)
 
 tasks = {}
 
-for t in getTaskNames():
-    d = os.path.join(tasksDir, t)
-    with open(os.path.join(d, tasksFilename)) as f:
-        j = json.load(f)
-        tasks[j["name"]] = Task(j)
+def _loadTasks():
+    tasks.clear()
 
-@app.route('/task/', methods=['GET'])
+    for t in getTaskNames():
+        d = os.path.join(tasksDir, t)
+        with open(os.path.join(d, tasksFilename)) as f:
+            j = json.load(f)
+            tasks[j["name"]] = Task(j)
+
+_loadTasks()
+
+@app.route('/init/', methods=['GET'])
+def loadTasks():
+    _loadTasks()
+
+    return jsonify(success=True)
+
+@app.route('/list/', methods=['GET'])
 def listTasks():
     return jsonify(result=[
         {
@@ -48,4 +58,4 @@ def runTask(task_name):
     return startJob(tasks[task_name])
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=bindPort, threaded=True, debug=True)
+    app.run(host="0.0.0.0", port=bindPort, threaded=False, debug=True)
