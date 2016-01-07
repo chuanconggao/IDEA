@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Usage:
+    GET (/ | /help/)
+        Show this help.
+
+    GET /init/
+        Reload tasks.
+
+    GET /list/
+        List tasks.
+
+    POST /task/<name>/
+        Run task <name>, with the arguments posted in JSON.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
@@ -32,6 +47,11 @@ def _loadTasks():
             tasks[j["name"]] = Task(j)
 
 _loadTasks()
+
+@app.route('/', methods=['GET'])
+@app.route('/help/', methods=['GET'])
+def showHelp():
+    return jsonify(result=__doc__)
 
 @app.route('/init/', methods=['GET'])
 def loadTasks():
