@@ -25,29 +25,32 @@ queues = {
 
 def verifyRequest(method, contentType):
     if request.method != method:
-        return (False, status.HTTP_405_METHOD_NOT_ALLOWED)
+        return status.HTTP_405_METHOD_NOT_ALLOWED
 
     if contentType is not None and request.headers['Content-Type'] != contentType:
-        return (False, status.HTTP_406_NOT_ACCEPTABLE)
+        return status.HTTP_406_NOT_ACCEPTABLE
 
-    return (True, None)
+    return None
 
 def startJob(task):
     def parseArgs(j, argStrs):
         return [j[s] for s in argStrs]
 
-    (verified, error) = verifyRequest('POST', 'application/json')
-    if not verified:
+    error = verifyRequest('POST', 'application/json')
+    if error is not None:
         return jsonify(error=error)
 
-    job = queues[task.name].enqueue(task.func, *parseArgs(request.json, task.args))
+    job = queues[task.name].enqueue(
+        task.func,
+        *parseArgs(request.json, task.args)
+    )
 
     runtime = 0
     while not job.is_failed and job.result is None:
         sleep(jobCheckInterval)
         runtime += jobCheckInterval
 
-    if job.is_failed:
-        return jsonify(error=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return jsonify(result=job.result, runtime=runtime)
+    return (
+        jsonify(error=status.HTTP_500_INTERNAL_SERVER_ERROR) if job.is_failed
+        else jsonify(result=job.result, runtime=runtime)
+    )
