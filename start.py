@@ -3,16 +3,17 @@
 
 """
 Usage:
-    GET (/ | /help/)
+    GET (/ | /help)
         Show this help.
 
-    GET /init/
+    GET /refresh
         Reload tasks.
 
-    GET /list/
+    GET /list
+    GET /task/
         List tasks.
 
-    POST /task/<name>/
+    POST /task/<name>
         Run task <name>, with the arguments posted in JSON.
 """
 
@@ -49,17 +50,18 @@ def _loadTasks():
 _loadTasks()
 
 @app.route('/', methods=['GET'])
-@app.route('/help/', methods=['GET'])
+@app.route('/help', methods=['GET'])
 def showHelp():
-    return jsonify(result=__doc__)
+    return __doc__
 
-@app.route('/init/', methods=['GET'])
+@app.route('/refresh', methods=['GET'])
 def loadTasks():
     _loadTasks()
 
     return jsonify(success=True)
 
-@app.route('/list/', methods=['GET'])
+@app.route('/list', methods=['GET'])
+@app.route('/task/', methods=['GET'])
 def listTasks():
     return jsonify(result=[
         {
@@ -70,7 +72,7 @@ def listTasks():
         for x in tasks.itervalues()
     ])
 
-@app.route('/task/<task_name>/', methods=['POST'])
+@app.route('/task/<task_name>', methods=['POST'])
 def runTask(task_name):
     if task_name not in tasks:
         return jsonify(error=status.HTTP_404_NOT_FOUND)
