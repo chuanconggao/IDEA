@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import os.path
 import json
+from collections import OrderedDict
 
 from flask import Flask, jsonify
 from flask.ext.api import status
@@ -44,7 +45,7 @@ def _loadTasks():
     for t in getTaskNames():
         d = os.path.join(tasksDir, t)
         with open(os.path.join(d, tasksFilename)) as f:
-            j = json.load(f)
+            j = json.load(f, object_pairs_hook=OrderedDict)
             tasks[j["name"]] = Task(j)
 
 _loadTasks()
