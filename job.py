@@ -38,7 +38,7 @@ def startJob(task):
 
     error = verifyRequest('POST', 'application/json')
     if error is not None:
-        return jsonify(error=error)
+        return jsonify(error=True), error
 
     job = queues[task.name].enqueue(
         task.func,
@@ -51,6 +51,6 @@ def startJob(task):
         runtime += jobCheckInterval
 
     return (
-        jsonify(error=status.HTTP_500_INTERNAL_SERVER_ERROR) if job.is_failed
+        jsonify(error=True), status.HTTP_500_INTERNAL_SERVER_ERROR if job.is_failed
         else jsonify(result=job.result, runtime=runtime)
     )

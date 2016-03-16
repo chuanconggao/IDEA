@@ -76,7 +76,7 @@ def listTasks():
 @app.route('/task/<task_name>', methods=['POST'])
 def runTask(task_name):
     if task_name not in tasks:
-        return jsonify(error=status.HTTP_404_NOT_FOUND)
+        return jsonify(error=True), status.HTTP_404_NOT_FOUND
 
     return startJob(tasks[task_name])
 
