@@ -4,13 +4,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from time import sleep
+import zlib
 
 from rq import Queue
 from redis import Redis
 from flask import jsonify, request
 from flask.ext.api import status
 import msgpack
-import zlib
 
 from task import getTaskNames
 from config import jobCheckInterval, redisHost, redisPassword, redisQueuePrefix, redisQueueTimeout
@@ -38,20 +38,17 @@ def startJob(task):
     def parseArgs(j, argStrs):
         return [j[s] for s in argStrs]
 
-    compress = request.args.get('compress') == '1'
-    error = verifyRequest('POST', 'application/octet-stream') if compress else None
-    error = verifyRequest('POST', 'application/json') if not compress else None
+    compress = request.args.get('compress') == 'true'
+    error = verifyRequest('POST', 'application/octet-stream' if compress else 'application/json')
     if error is not None:
         return jsonify(error=True), error
 
-    if compress:
-        json = msgpack.unpackb(zlib.decompress(request.get_data()))
-    else:
-        json = request.json
-
     job = queues[task.name].enqueue(
         task.func,
-        *parseArgs(json, task.args)
+        *parseArgs(
+            msgpack.unpackb(zlib.decompress(request.get_data())) if compress else request.json,
+            task.args
+        )
     )
 
     runtime = 0
