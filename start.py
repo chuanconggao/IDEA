@@ -10,10 +10,12 @@ Usage:
         Reload tasks.
 
     GET /list
-    GET /task/
+    GET /tasks
         List tasks.
 
-    POST /task/<name>
+    GET /tasks/<name>
+        Show task <name>.
+    POST /tasks/<name>
         Run task <name>, with the arguments posted in JSON.
 """
 
@@ -24,14 +26,14 @@ import os.path
 import json
 from collections import OrderedDict
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, abort
 from flask.ext.api import status
 from flask.ext.cors import CORS
 from flask.ext.compress import Compress
 
 from task import getTaskNames, Task
 from job import startJob
-from config import bindPort, tasksDir, tasksFilename
+from config import bindPort, tasksDir, taskFilename
 
 app = Flask("IDEA")
 CORS(app)
@@ -44,7 +46,7 @@ def _loadTasks():
 
     for t in getTaskNames():
         d = os.path.join(tasksDir, t)
-        with open(os.path.join(d, tasksFilename)) as f:
+        with open(os.path.join(d, taskFilename)) as f:
             j = json.load(f, object_pairs_hook=OrderedDict)
             tasks[j["name"]] = Task(j)
 
@@ -61,24 +63,30 @@ def loadTasks():
 
     return jsonify(success=True)
 
+def _getDescription(task):
+    return {
+        "name": task.name,
+        "args": task.args,
+        "description": task.description,
+    }
+
 @app.route('/list', methods=['GET'])
-@app.route('/task/', methods=['GET'])
+@app.route('/tasks', methods=['GET'])
 def listTasks():
-    return jsonify(result=[
-        {
-            "name": x.name,
-            "args": x.args,
-            "description": x.description,
-        }
-        for x in tasks.itervalues()
+    return jsonify(tasks=[
+        _getDescription(task) for task in tasks.itervalues()
     ])
 
-@app.route('/task/<task_name>', methods=['POST'])
+@app.route('/tasks/<task_name>', methods=['GET', 'POST'])
 def runTask(task_name):
     if task_name not in tasks:
-        return jsonify(error=True), status.HTTP_404_NOT_FOUND
+        abort(status.HTTP_404_NOT_FOUND)
 
-    return startJob(tasks[task_name])
+    task = tasks[task_name]
+    if request.method == 'GET':
+        return jsonify(task=_getDescription(task))
+    elif request.method == 'POST':
+        return startJob(task)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=bindPort, threaded=False, debug=True)

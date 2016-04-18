@@ -15,9 +15,9 @@ with open("config.json") as f:
     redisHost = j["redis"]["host"]
     redisPassword = j["redis"]["password"]
 
-tasksFilename = "task.json"
+taskFilename = "task.json"
 
-jobCheckInterval = 0.5
+jobCheckInterval = 0.1
 
 redisQueuePrefix = "IDEA:"
 redisQueueTimeout = 3600

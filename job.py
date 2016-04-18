@@ -8,7 +8,7 @@ import zlib
 
 from rq import Queue
 from redis import Redis
-from flask import jsonify, request
+from flask import jsonify, request, abort
 from flask.ext.api import status
 import msgpack
 
@@ -39,24 +39,28 @@ def startJob(task):
         return [j[s] for s in argStrs]
 
     compress = request.args.get('compress') == 'true'
+
     error = verifyRequest('POST', 'application/octet-stream' if compress else 'application/json')
     if error is not None:
-        return jsonify(error=True), error
+        abort(error)
 
-    job = queues[task.name].enqueue(
-        task.func,
-        *parseArgs(
-            msgpack.unpackb(zlib.decompress(request.get_data())) if compress else request.json,
-            task.args
+    try:
+        job = queues[task.name].enqueue(
+            task.func,
+            *parseArgs(
+                msgpack.unpackb(zlib.decompress(request.get_data())) if compress else request.json,
+                task.args
+            )
         )
-    )
+    except:
+        abort(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     runtime = 0
     while not job.is_failed and job.result is None:
         sleep(jobCheckInterval)
         runtime += jobCheckInterval
 
-    return (
-        jsonify(error=True), status.HTTP_500_INTERNAL_SERVER_ERROR if job.is_failed
-        else jsonify(result=job.result, runtime=runtime)
-    )
+    if job.is_failed:
+        abort(status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return jsonify(result=job.result, runtime=runtime)
