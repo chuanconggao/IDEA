@@ -9,7 +9,7 @@ import zlib
 from rq import Queue
 from redis import Redis
 from flask import jsonify, request, abort
-from flask.ext.api import status
+from flask_api import status
 import msgpack
 
 from task import getTaskNames
@@ -34,6 +34,9 @@ def verifyRequest(method, contentType):
 
     return None
 
+def decompress(d):
+    return msgpack.unpackb(zlib.decompress(d), encoding='utf-8')
+
 def startJob(task):
     def parseArgs(j, argStrs):
         return [j[s] for s in argStrs]
@@ -48,7 +51,7 @@ def startJob(task):
         job = queues[task.name].enqueue(
             task.func,
             *parseArgs(
-                msgpack.unpackb(zlib.decompress(request.get_data())) if compress else request.json,
+                decompress(request.get_data()) if compress else request.json,
                 task.args
             )
         )

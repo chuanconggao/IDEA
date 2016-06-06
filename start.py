@@ -27,9 +27,9 @@ import json
 from collections import OrderedDict
 
 from flask import Flask, jsonify, request, abort
-from flask.ext.api import status
-from flask.ext.cors import CORS
-from flask.ext.compress import Compress
+from flask_api import status
+from flask_cors import CORS
+from flask_compress import Compress
 
 from task import getTaskNames, Task
 from job import startJob
