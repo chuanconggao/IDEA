@@ -8,7 +8,7 @@ import zlib
 
 from rq import Queue
 from redis import Redis
-from flask import jsonify, request, abort
+from flask import jsonify, request
 from flask_api import status
 import msgpack
 
@@ -45,7 +45,7 @@ def startJob(task):
 
     error = verifyRequest('POST', 'application/octet-stream' if compress else 'application/json')
     if error is not None:
-        abort(error)
+        return jsonify(message="Invalid request parameters."), error
 
     try:
         job = queues[task.name].enqueue(
@@ -55,8 +55,8 @@ def startJob(task):
                 task.args
             )
         )
-    except:
-        abort(status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return jsonify(message=str(e)), status.HTTP_500_INTERNAL_SERVER_ERROR
 
     runtime = 0
     while not job.is_failed and job.result is None:
@@ -64,6 +64,6 @@ def startJob(task):
         runtime += jobCheckInterval
 
     if job.is_failed:
-        abort(status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return jsonify(message="Fail to execute the task."), status.HTTP_500_INTERNAL_SERVER_ERROR
 
     return jsonify(result=job.result, runtime=runtime)

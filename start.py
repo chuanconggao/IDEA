@@ -26,7 +26,7 @@ import os.path
 import json
 from collections import OrderedDict
 
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request
 from flask_api import status
 from flask_cors import CORS
 from flask_compress import Compress
@@ -80,7 +80,7 @@ def listTasks():
 @app.route('/tasks/<task_name>', methods=['GET', 'POST'])
 def runTask(task_name):
     if task_name not in tasks:
-        abort(status.HTTP_404_NOT_FOUND)
+        return jsonify(message="Task does not exist."), status.HTTP_404_NOT_FOUND
 
     task = tasks[task_name]
     if request.method == 'GET':
