@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import json
 
@@ -10,5 +9,4 @@ with open("config.json") as f:
 
 bind = "0.0.0.0:{}".format(bindPort)
 workers = 4
-loglevel = "debug"
-timeout = 60 * 10
+timeout = 600

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Usage:
@@ -19,74 +18,91 @@ Usage:
         Run task <name>, with the arguments posted in JSON.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import os.path
 import json
-from collections import OrderedDict
 
-from flask import Flask, jsonify, request
+from sanic import response
+from sanic import Sanic
 from flask_api import status
-from flask_cors import CORS
-from flask_compress import Compress
+from sanic_cors import CORS
+from sanic_compress import Compress
 
 from task import getTaskNames, Task
 from job import startJob
 from config import bindPort, tasksDir, taskFilename
 
-app = Flask("IDEA")
+app = Sanic("IDEA")
+app.config.LOGO = ""
 CORS(app)
 Compress(app)
 
 tasks = {}
 
-def _loadTasks():
+def __loadTasks():
     tasks.clear()
 
     for t in getTaskNames():
         d = os.path.join(tasksDir, t)
         with open(os.path.join(d, taskFilename)) as f:
-            j = json.load(f, object_pairs_hook=OrderedDict)
+            j = json.load(f)
             tasks[j["name"]] = Task(j)
 
-_loadTasks()
 
-@app.route('/', methods=['GET'])
-@app.route('/help', methods=['GET'])
-def showHelp():
-    return __doc__
+__loadTasks()
 
-@app.route('/refresh', methods=['GET'])
-def loadTasks():
-    _loadTasks()
+@app.route('/')
+@app.route('/help')
+async def showHelp(request):
+    return response.text(__doc__)
 
-    return jsonify(success=True)
 
-def _getDescription(task):
+@app.route('/refresh')
+async def loadTasks(request):
+    __loadTasks()
+
+    return response.json({
+        "success": True
+    })
+
+
+def __getDescription(task):
     return {
         "name": task.name,
         "args": task.args,
         "description": task.description,
     }
 
-@app.route('/list', methods=['GET'])
-@app.route('/tasks', methods=['GET'])
-def listTasks():
-    return jsonify(tasks=[
-        _getDescription(task) for task in tasks.itervalues()
-    ])
+
+@app.route('/list')
+@app.route('/tasks')
+async def listTasks(request):
+    return response.json({
+        "tasks": [
+            __getDescription(task) for task in tasks.values()
+        ]
+    })
+
 
 @app.route('/tasks/<task_name>', methods=['GET', 'POST'])
-def runTask(task_name):
+async def runTask(request, task_name):
     if task_name not in tasks:
-        return jsonify(message="Task does not exist."), status.HTTP_404_NOT_FOUND
+        return response.json({
+            "message": "Task does not exist."
+        }, status=status.HTTP_404_NOT_FOUND)
 
     task = tasks[task_name]
     if request.method == 'GET':
-        return jsonify(task=_getDescription(task))
+        return response.json({
+            "task": __getDescription(task)
+        })
     elif request.method == 'POST':
-        return startJob(task)
+        return await startJob(request, task)
+
+    return response.json({
+        "message": "Unsupported method."
+    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=bindPort, threaded=False, debug=True)
+    app.run(host="0.0.0.0", port=bindPort, debug=True)

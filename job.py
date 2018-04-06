@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division, print_function, unicode_literals
+#!/usr/bin/env python3
 
 from time import sleep
 import zlib
 
 from rq import Queue
 from redis import Redis
-from flask import jsonify, request
+from sanic import response
 from flask_api import status
 import msgpack
 
@@ -25,7 +22,7 @@ queues = {
     for task in getTaskNames()
 }
 
-def verifyRequest(method, contentType):
+def verifyRequest(request, method, contentType):
     if request.method != method:
         return status.HTTP_405_METHOD_NOT_ALLOWED
 
@@ -34,29 +31,36 @@ def verifyRequest(method, contentType):
 
     return None
 
+
 def decompress(d):
     return msgpack.unpackb(zlib.decompress(d), encoding='utf-8')
 
-def startJob(task):
+
+async def startJob(request, task):
     def parseArgs(j, argStrs):
-        return [j[s] for s in argStrs]
+        return {s: j[s] for s in argStrs}
+
 
     compress = request.args.get('compress') == 'true'
 
-    error = verifyRequest('POST', 'application/octet-stream' if compress else 'application/json')
+    error = verifyRequest(request, 'POST', 'application/octet-stream' if compress else 'application/json')
     if error is not None:
-        return jsonify(message="Invalid request parameters."), error
+        return response.json({
+            "message": "Invalid request parameters."
+        }, status=error)
 
     try:
         job = queues[task.name].enqueue(
             task.func,
-            *parseArgs(
+            **parseArgs(
                 decompress(request.get_data()) if compress else request.json,
                 task.args
             )
         )
     except Exception as e:
-        return jsonify(message=str(e)), status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response.json({
+            "message": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     runtime = 0
     while not job.is_failed and job.result is None:
@@ -64,6 +68,11 @@ def startJob(task):
         runtime += jobCheckInterval
 
     if job.is_failed:
-        return jsonify(message="Fail to execute the task."), status.HTTP_500_INTERNAL_SERVER_ERROR
+        return response.json({
+            "message": "Fail to execute the task."
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return jsonify(result=job.result, runtime=runtime)
+    return response.json({
+        "result": job.result,
+        "runtime": runtime
+    })

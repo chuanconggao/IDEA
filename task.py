@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division, print_function, unicode_literals
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -14,6 +11,7 @@ def getTaskNames():
         d for d in os.listdir(tasksDir)
         if os.path.isdir(os.path.join(tasksDir, d))
     ]
+
 
 class Task(object):
     def __init__(self, template):
