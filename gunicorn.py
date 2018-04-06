@@ -8,5 +8,6 @@ with open("config.json") as f:
     bindPort = j["port"]
 
 bind = "0.0.0.0:{}".format(bindPort)
-workers = 4
+workers = 1
+worker_class = "sanic.worker.GunicornWorker"
 timeout = 600

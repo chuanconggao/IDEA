@@ -53,7 +53,7 @@ async def startJob(request, task):
         job = queues[task.name].enqueue(
             task.func,
             **parseArgs(
-                decompress(request.get_data()) if compress else request.json,
+                decompress(request.body) if compress else request.json,
                 task.args
             )
         )
