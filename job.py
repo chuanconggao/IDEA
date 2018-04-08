@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from time import sleep
+import asyncio
 import zlib
 
 from rq import Queue
@@ -37,10 +37,6 @@ def decompress(d):
 
 
 async def startJob(request, task):
-    def parseArgs(j, argStrs):
-        return {s: j[s] for s in argStrs}
-
-
     compress = request.args.get('compress') == 'true'
 
     error = verifyRequest(request, 'POST', 'application/octet-stream' if compress else 'application/json')
@@ -52,10 +48,10 @@ async def startJob(request, task):
     try:
         job = queues[task.name].enqueue(
             task.func,
-            **parseArgs(
-                decompress(request.body) if compress else request.json,
-                task.args
-            )
+            **{
+                s: (decompress(request.body) if compress else request.json)[s]
+                for s in task.args
+            }
         )
     except Exception as e:
         return response.json({
@@ -64,7 +60,7 @@ async def startJob(request, task):
 
     runtime = 0
     while not job.is_failed and job.result is None:
-        sleep(jobCheckInterval)
+        await asyncio.sleep(jobCheckInterval)
         runtime += jobCheckInterval
 
     if job.is_failed:
