@@ -21,10 +21,10 @@ Usage:
 import os
 import os.path
 import json
+from http import HTTPStatus
 
 from sanic import response
 from sanic import Sanic
-from flask_api import status
 from sanic_cors import CORS
 from sanic_compress import Compress
 
@@ -89,7 +89,7 @@ async def runTask(request, task_name):
     if task_name not in tasks:
         return response.json({
             "message": "Task does not exist."
-        }, status=status.HTTP_404_NOT_FOUND)
+        }, status=HTTPStatus.NOT_FOUND)
 
     task = tasks[task_name]
     if request.method == 'GET':
@@ -101,7 +101,7 @@ async def runTask(request, task_name):
 
     return response.json({
         "message": "Unsupported method."
-    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    }, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 if __name__ == '__main__':
